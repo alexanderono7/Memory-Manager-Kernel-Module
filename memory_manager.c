@@ -1,4 +1,3 @@
-// Alexander Ono
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/kthread.h>
@@ -10,6 +9,7 @@
 static int pid = 0;
 static int rss_pages = 0;
 static int swap_pages = 0;
+static int wss_pages = 0;
 
 int ptep_test_and_clear_young (struct vm_area_struct *vma, unsigned long addr, pte_t *ptep);
 /* Test and clear the accessed bit of a given pte entry. vma is the pointer
@@ -18,12 +18,11 @@ to a pte. It returns 1 if the pte was accessed, or 0 if not accessed. */
 /* The ptep_test_and_clear_young() is architecture dependent and is not
 exported to be used in a kernel module. You will need to add its
 implementation as follows to your kernel module. */
-int ptep_test_and_clear_young(struct vm_area_struct *vma,
-unsigned long addr, pte_t *ptep)
-{
+int ptep_test_and_clear_young(struct vm_area_struct *vma, unsigned long addr, pte_t *ptep) {
     int ret = 0;
     if (pte_young(*ptep)){
         ret = test_and_clear_bit(_PAGE_BIT_ACCESSED, (unsigned long *) &ptep->pte);
+        wss_pages++;
     }
     return ret;
 }
@@ -92,6 +91,8 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
     result = ptep;
     rss_pages++;
     swap_pages--;
+    ptep_test_and_clear_young(mm->mmap, address, result);
+
     return result;
 }
 
@@ -107,6 +108,8 @@ void probe(void){
                     unsigned long end = p->mm->mmap->vm_end;
                     unsigned long i;
                     struct vm_area_struct* foo;
+                    pte_t *ptep;
+                    int res;
 
                     printk("starting addr: %p", (void*)(p->mm->mmap->vm_start));
                     printk("ending addr: %p", (void*)(p->mm->mmap->vm_end));
@@ -125,8 +128,6 @@ void probe(void){
                         access_page(p->mm, i);
                         //if(i==end) printk("completed.");
                     }
-                    int res;
-                    pte_t *ptep;
                     while(foo->vm_next){
                         start = foo->vm_start;
                         end = foo->vm_end;
@@ -154,43 +155,31 @@ struct task_struct* find_pid(void){
     
     for_each_process(p){
         if(p->pid == pid){
-            printk("\nFOUND IT! : %d\n",p->pid);
+            //printk("\nFOUND IT! : %d\n",p->pid);
             result = p;
         }
-        //printk("don't care: %d",p->pid);
     }
     return result;
 }
 
 // Traverse Memory regions (VMAs)?
 int traverse_vmas(struct task_struct* task){
-    //struct vm_area_struct* vma;
-    //printk("%d",PAGE_SIZE); // this works btw, printing the page size
-    //vma = task->mm->mmap;
-
     if(task->mm){
         if(task->mm->mmap){
             if(task->mm->mmap->vm_start){
-                unsigned long start = task->mm->mmap->vm_start;
-                unsigned long end = task->mm->mmap->vm_end;
-                unsigned long i;
+                unsigned long start = task->mm->mmap->vm_start; // get starting addr of memory region (vma)
+                unsigned long end = task->mm->mmap->vm_end; // get ending addr of memory region
+                unsigned long i; // iterator
                 struct vm_area_struct* foo;
-                //printk("starting addr: %p", (void*)(p->mm->mmap->vm_start));
-                //printk("ending addr: %p", (void*)(p->mm->mmap->vm_end));
-                //printk("diff: %lu", end-start);
-                //printk("# pages?: %lu", (end-start)/PAGE_SIZE);
-                //printk("remainder?: %lu", (end-start)%PAGE_SIZE);
 
-                //access_page(p->mm, p->mm->mmap->vm_start); // access_page on vm_start
                 foo = task->mm->mmap;
                 while(foo){
                     start = foo->vm_start;
                     end = foo->vm_end;
                     for(i = start; i <= end; i+=PAGE_SIZE){
                         access_page(task->mm, i);
-                        //if(i==end) printk("completed.");
                     }
-                    foo = foo->vm_next;
+                    foo = foo->vm_next; // move to next vma (if it exists)
                 }
             }
         }
@@ -210,25 +199,25 @@ enum hrtimer_restart no_restart_callback(struct hrtimer *timer){
     return HRTIMER_NORESTART;
 }
 
-// Count # of page table entries being accessed for a given process right now
-//int count_ptes(){ }
-
+void get_everything(struct task_struct* proc){
+    int rss_size, swap_size, wss_size;
+    traverse_vmas(proc);
+    rss_size  = rss_pages * PAGE_SIZE;
+    swap_size = swap_pages * PAGE_SIZE;
+    wss_size  = wss_pages * PAGE_SIZE;
+    printk("PID %d: RSS=%d KB, SWAP=%d KB, WSS=%d KB", pid, rss_size, swap_size, wss_size);
+}
 
 // Initialize kernel module
 int memman_init(void){
     struct task_struct* proc;
-    //printk("Memory manager launched!\n");
-    probe();
-    return 0;
+    //probe();
     proc = find_pid();
     if(!proc){
         printk("Couldn't find process w/ PID %d", pid);
         return 0;
     }
-    traverse_vmas(proc);
-    printk("pages in rss: %d", rss_pages);
-    printk("pages in swap: %d", swap_pages);
-
+    get_everything(proc);
     return 0;
 }
 
