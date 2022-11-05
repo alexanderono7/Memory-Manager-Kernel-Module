@@ -101,58 +101,6 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
     return result;
 }
 
-// Print out all tasks which have a valid mm and mmap (used for testing purposes)
-void probe(void){
-    struct task_struct* p;
-    for_each_process(p){
-        if(p->mm){
-            if(p->mm->mmap){
-                printk("\nvalid: process # %d", p->pid);
-                if(p->mm->mmap->vm_start){
-                    unsigned long start = p->mm->mmap->vm_start;
-                    unsigned long end = p->mm->mmap->vm_end;
-                    unsigned long i;
-                    struct vm_area_struct* foo;
-                    pte_t *ptep;
-                    int res;
-
-                    printk("starting addr: %p", (void*)(p->mm->mmap->vm_start));
-                    printk("ending addr: %p", (void*)(p->mm->mmap->vm_end));
-                    printk("diff: %lu", end-start);
-                    printk("# pages?: %lu", (end-start)/PAGE_SIZE);
-                    printk("remainder?: %lu", (end-start)%PAGE_SIZE);
-
-                    if(p->mm->mmap->vm_next){
-                        printk("has a next vma?: yes!");
-                    }else{
-                        printk("has a next vma?: no.");
-                    }
-                    //access_page(p->mm, p->mm->mmap->vm_start); // access_page on vm_start
-                    foo = p->mm->mmap;
-                    for(i = start; i <= end; i+=PAGE_SIZE){
-                        access_page(p->mm, i);
-                        //if(i==end) printk("completed.");
-                    }
-                    while(foo->vm_next){
-                        start = foo->vm_start;
-                        end = foo->vm_end;
-                        for(i = start; i <= end; i+=PAGE_SIZE){
-                            ptep = access_page(p->mm, i);
-                            if(ptep){
-                                res = ptep_test_and_clear_young(foo, i, ptep);
-                                printk("ptep test value: %d", res);
-                            }
-                        }
-                        foo = foo->vm_next;
-                    }
-                }
-            }
-        }
-        return; // I only want to do one process for testing the page walk.
-    }
-    return;
-}
-
 // Find the process whose PID matches `pid` and return its task_struct ptr
 struct task_struct* find_pid(void){
     struct task_struct* p;
@@ -228,7 +176,7 @@ int memman_init(void){
         return 0;
     }
     process = proc;
-    traverse_vmas(proc); // clear bits of existing page tables? maybe?
+    //traverse_vmas(proc); // clear bits of existing page tables? maybe?
     get_everything(process);
 
     ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
