@@ -43,14 +43,13 @@ int traverse_vmas(struct task_struct* task){
     //vma = task->mm->mmap;
     if(task->mm){
         if(task->mm->mmap){
-            printk("valid: process # %d", task->pid);
+            printk("%lu", vma->vm_next->vm_start);
         }
     }else{
         //printk("");
     }
     //printk("%d", &vma->vm_start);
     //printk("\n\n\n\n");
-    //printk("%lu", vma->vm_next->vm_start);
     //printk("%d", vma->vm_end);
     return 0;
 }
@@ -65,7 +64,7 @@ int memman_init(void){
         printk("Couldn't find process w/ PID %d", pid);
         return 0;
     }
-    //traverse_vmas(proc);
+    traverse_vmas(proc);
     return 0;
 }
 
