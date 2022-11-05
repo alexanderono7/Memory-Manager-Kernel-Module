@@ -14,7 +14,7 @@ void probe(void){
     for_each_process(p){
         if(p->mm){
             if(p->mm->mmap){
-                printk("valid: process # %d", p->pid);
+                printk("\nvalid: process # %d", p->pid);
                 if(p->mm->mmap->vm_start){
                     unsigned long start = p->mm->mmap->vm_start;
                     unsigned long end = p->mm->mmap->vm_end;
@@ -23,6 +23,12 @@ void probe(void){
                     printk("diff: %lu", end-start);
                     printk("# pages?: %lu", (end-start)/PAGE_SIZE);
                     printk("remainder?: %lu", (end-start)%PAGE_SIZE);
+
+                    if(p->mm->mmap->vm_next){
+                        printk("has a next vma?: yes!");
+                    }else{
+                        printk("has a next vma?: no.");
+                    }
                 }
             }
         }
