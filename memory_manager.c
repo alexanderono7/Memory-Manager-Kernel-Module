@@ -23,7 +23,7 @@ void access_page(struct mm_struct* mm, unsigned long address){
         printk("pgd is bad or does not exist");
         return;
     }else{
-        printk("pgd is good!");
+        //printk("pgd is good!");
     }
 
     p4d = p4d_offset(pgd, address); //get p4d from from pgd and the page address
@@ -32,25 +32,25 @@ void access_page(struct mm_struct* mm, unsigned long address){
         printk("p4d is bad or does not exist");
         return;
     }else{
-        printk("p4d is good!");
+        //printk("p4d is good!");
     }
 
     pud = pud_offset(p4d, address); // get pud from from p4d and the page address
     if (pud_none(*pud) || pud_bad(*pud)) {
         // check if pud is bad or does not exist
-        printk("pud is bad or does not exist");
+        //printk("pud is bad or does not exist");
         return;
     }else{
-        printk("pud is good!");
+        //printk("pud is good!");
     }
 
     pmd = pmd_offset(pud, address); // get pmd from from pud and the page address
     if (pmd_none(*pmd) || pmd_bad(*pmd)) {
         // check if pmd is bad or does not exist
-        printk("pmd is bad or does not exist");
+        //printk("pmd is bad or does not exist");
         return;
     }else{
-        printk("pmd is good!");
+        //printk("pmd is good!");
     }
 
     ptep = pte_offset_map(pmd, address); // get pte from pmd and the page address
@@ -59,7 +59,7 @@ void access_page(struct mm_struct* mm, unsigned long address){
         printk("pte is bad or does not exist");
         return;
     }else{
-        printk("pte is good!");
+        //printk("pte is good!");
     }
 
     pte = *ptep;
@@ -89,14 +89,25 @@ void probe(void){
                     }
                     //access_page(p->mm, p->mm->mmap->vm_start); // access_page on vm_start
                     unsigned long i;
+                    struct vm_area_struct* foo;
+                    foo = p->mm->mmap;
                     for(i = start; i <= end; i+=PAGE_SIZE){
                         access_page(p->mm, i);
-                        if(i==end) printk("completed.");
+                        //if(i==end) printk("completed.");
+                    }
+                    while(foo->vm_next){
+                        start = foo->vm_start;
+                        end = foo->vm_end;
+                        for(i = start; i <= end; i+=PAGE_SIZE){
+                            access_page(p->mm, i);
+                            //if(i==end) printk("completed.");
+                        }
+                        foo = foo->vm_next;
                     }
                 }
             }
         }
-        return; // I only want to do one process for testing the page walk.
+        //return; // I only want to do one process for testing the page walk.
     }
     return;
 }
