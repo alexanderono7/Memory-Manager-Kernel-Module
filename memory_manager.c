@@ -8,10 +8,23 @@ static int pid = 0;
 // Receive arguments to the kernel module
 module_param(pid, int, 0644);
 
+// Print out all tasks which have a valid mm and mmap (used for testing purposes)
+void probe(void){
+    struct task_struct* p;
+    for_each_process(p){
+        if(p->mm){
+            if(p->mm->mmap){
+                printk("valid: process # %d", p->pid);
+            }
+        }
+    }
+    return;
+}
+
 // Find the process whose PID matches `pid` and return its task_struct ptr
 struct task_struct* find_pid(void){
     struct task_struct* p;
-    struct task_struct* result;
+    struct task_struct* result = NULL;
     
     for_each_process(p){
         if(p->pid == pid){
@@ -29,9 +42,11 @@ int traverse_vmas(struct task_struct* task){
     //printk("%d",PAGE_SIZE); // this works btw, printing the page size
     //vma = task->mm->mmap;
     if(task->mm){
-        printk("yes");
+        if(task->mm->mmap){
+            printk("valid: process # %d", task->pid);
+        }
     }else{
-        printk("no");
+        //printk("");
     }
     //printk("%d", &vma->vm_start);
     //printk("\n\n\n\n");
@@ -44,8 +59,13 @@ int traverse_vmas(struct task_struct* task){
 int memman_init(void){
     struct task_struct* proc;
     printk("Memory manager launched!\n");
+    //probe();
     proc = find_pid();
-    traverse_vmas(proc);
+    if(!proc){
+        printk("Couldn't find process w/ PID %d", pid);
+        return 0;
+    }
+    //traverse_vmas(proc);
     return 0;
 }
 
