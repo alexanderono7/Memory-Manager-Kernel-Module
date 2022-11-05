@@ -7,6 +7,9 @@
 #include <linux/mm.h>
 
 static int pid = 0;
+static int rss_pages = 0;
+static int swap_pages = 0;
+
 // Receive arguments to the kernel module
 module_param(pid, int, 0644);
 
@@ -16,12 +19,15 @@ void access_page(struct mm_struct* mm, unsigned long address){
     p4d_t *p4d;
     pmd_t *pmd;
     pud_t *pud;
-    pte_t *ptep, pte;
+    pte_t *ptep;
+    //pte_t *ptep, pte;
+
+    swap_pages++;
 
     pgd = pgd_offset(mm, address); // get pgd from mm and the page address
     if (pgd_none(*pgd) || pgd_bad(*pgd)) {
         // check if pgd is bad or does not exist
-        printk("pgd is bad or does not exist");
+        //printk("pgd is bad or does not exist");
         return;
     }else{
         //printk("pgd is good!");
@@ -30,7 +36,7 @@ void access_page(struct mm_struct* mm, unsigned long address){
     p4d = p4d_offset(pgd, address); //get p4d from from pgd and the page address
     if (p4d_none(*p4d) || p4d_bad(*p4d)) {
         // check if p4d is bad or does not exist
-        printk("p4d is bad or does not exist");
+        //printk("p4d is bad or does not exist");
         return;
     }else{
         //printk("p4d is good!");
@@ -40,7 +46,7 @@ void access_page(struct mm_struct* mm, unsigned long address){
     if (pud_none(*pud) || pud_bad(*pud)) {
         // check if pud is bad or does not exist
         //printk("pud is bad or does not exist");
-        return;
+        //return;
     }else{
         //printk("pud is good!");
     }
@@ -57,13 +63,15 @@ void access_page(struct mm_struct* mm, unsigned long address){
     ptep = pte_offset_map(pmd, address); // get pte from pmd and the page address
     if (!ptep){
         // check if pte does not exist
-        printk("pte is bad or does not exist");
+        //printk("pte is bad or does not exist");
         return;
     }else{
         //printk("pte is good!");
     }
 
-    pte = *ptep;
+    //pte = *ptep; //is this necessary??
+    rss_pages++;
+    swap_pages--;
     return;
 }
 
@@ -77,6 +85,9 @@ void probe(void){
                 if(p->mm->mmap->vm_start){
                     unsigned long start = p->mm->mmap->vm_start;
                     unsigned long end = p->mm->mmap->vm_end;
+                    unsigned long i;
+                    struct vm_area_struct* foo;
+
                     printk("starting addr: %p", (void*)(p->mm->mmap->vm_start));
                     printk("ending addr: %p", (void*)(p->mm->mmap->vm_end));
                     printk("diff: %lu", end-start);
@@ -89,8 +100,6 @@ void probe(void){
                         printk("has a next vma?: no.");
                     }
                     //access_page(p->mm, p->mm->mmap->vm_start); // access_page on vm_start
-                    unsigned long i;
-                    struct vm_area_struct* foo;
                     foo = p->mm->mmap;
                     for(i = start; i <= end; i+=PAGE_SIZE){
                         access_page(p->mm, i);
@@ -130,33 +139,53 @@ struct task_struct* find_pid(void){
 
 // Traverse Memory regions (VMAs)?
 int traverse_vmas(struct task_struct* task){
-    struct vm_area_struct* vma;
+    //struct vm_area_struct* vma;
     //printk("%d",PAGE_SIZE); // this works btw, printing the page size
     //vma = task->mm->mmap;
+
     if(task->mm){
         if(task->mm->mmap){
-            printk("%lu", vma->vm_next->vm_start);
+            if(task->mm->mmap->vm_start){
+                unsigned long start = task->mm->mmap->vm_start;
+                unsigned long end = task->mm->mmap->vm_end;
+                unsigned long i;
+                struct vm_area_struct* foo;
+                //printk("starting addr: %p", (void*)(p->mm->mmap->vm_start));
+                //printk("ending addr: %p", (void*)(p->mm->mmap->vm_end));
+                //printk("diff: %lu", end-start);
+                //printk("# pages?: %lu", (end-start)/PAGE_SIZE);
+                //printk("remainder?: %lu", (end-start)%PAGE_SIZE);
+
+                //access_page(p->mm, p->mm->mmap->vm_start); // access_page on vm_start
+                foo = task->mm->mmap;
+                while(foo){
+                    start = foo->vm_start;
+                    end = foo->vm_end;
+                    for(i = start; i <= end; i+=PAGE_SIZE){
+                        access_page(task->mm, i);
+                        //if(i==end) printk("completed.");
+                    }
+                    foo = foo->vm_next;
+                }
+            }
         }
-    }else{
-        //printk("");
     }
-    //printk("%d", &vma->vm_start);
-    //printk("\n\n\n\n");
-    //printk("%d", vma->vm_end);
     return 0;
 }
 
 // Initialize kernel module
 int memman_init(void){
     struct task_struct* proc;
-    printk("Memory manager launched!\n");
-    probe();
+    //printk("Memory manager launched!\n");
+    //probe();
     proc = find_pid();
     if(!proc){
         printk("Couldn't find process w/ PID %d", pid);
         return 0;
     }
-    //traverse_vmas(proc);
+    traverse_vmas(proc);
+    printk("pages in rss: %d", rss_pages);
+    printk("pages in swap: %d", swap_pages);
     return 0;
 }
 
