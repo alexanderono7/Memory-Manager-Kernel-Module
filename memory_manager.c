@@ -15,6 +15,11 @@ void probe(void){
         if(p->mm){
             if(p->mm->mmap){
                 printk("valid: process # %d", p->pid);
+                if(p->mm->mmap->vm_start){
+                    unsigned long x;
+                    x = p->mm->mmap->vm_start;
+                    printk("%lu", x);
+                }
             }
         }
     }
@@ -58,13 +63,13 @@ int traverse_vmas(struct task_struct* task){
 int memman_init(void){
     struct task_struct* proc;
     printk("Memory manager launched!\n");
-    //probe();
+    probe();
     proc = find_pid();
     if(!proc){
         printk("Couldn't find process w/ PID %d", pid);
         return 0;
     }
-    traverse_vmas(proc);
+    //traverse_vmas(proc);
     return 0;
 }
 
