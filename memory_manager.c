@@ -10,6 +10,7 @@ static int pid = 0;
 static int rss_pages = 0;
 static int swap_pages = 0;
 static int wss_pages = 0;
+struct task_struct* process;
 
 int ptep_test_and_clear_young (struct vm_area_struct *vma, unsigned long addr, pte_t *ptep);
 /* Test and clear the accessed bit of a given pte entry. vma is the pointer
@@ -187,20 +188,13 @@ int traverse_vmas(struct task_struct* task){
     return 0;
 }
 
-// 10 second timer for measuring 1 instance of the WSS
-unsigned long timer_interval_ns = 10e9; // 10-second timer
-enum hrtimer_restart no_restart_callback(struct hrtimer *timer){
-    ktime_t currtime, interval;
-    currtime = ktime_get();
-    interval = ktime_set(0, timer_interval_ns);
-    hrtimer_forward(timer, currtime, interval);
-    // Do the measurement
-    printk("Timer...running?");
-    return HRTIMER_NORESTART;
-}
+#define TIMEOUT_NSEC   ( 1000000000L )      //1 second in nano seconds
+#define TIMEOUT_SEC    ( 3 )                //4 seconds
+static struct hrtimer etx_hr_timer;
+
 
 void get_everything(struct task_struct* proc){
-    int rss_size, swap_size, wss_size;
+    int rss_size=0, swap_size=0, wss_size=0;
     traverse_vmas(proc);
     rss_size  = rss_pages * PAGE_SIZE;
     swap_size = swap_pages * PAGE_SIZE;
@@ -208,16 +202,37 @@ void get_everything(struct task_struct* proc){
     printk("PID %d: RSS=%d KB, SWAP=%d KB, WSS=%d KB", pid, rss_size, swap_size, wss_size);
 }
 
+//Timer Callback function. This will be called when timer expires
+enum hrtimer_restart timer_callback(struct hrtimer *timer)
+{
+    //pr_info("Timer Callback function Called [%d]\n",count++);
+    /* vvv do your timer stuff here vvv */
+    get_everything(process);
+    hrtimer_forward_now(timer,ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC));
+    return HRTIMER_RESTART;
+}
+
 // Initialize kernel module
 int memman_init(void){
     struct task_struct* proc;
+    ktime_t ktime;
     //probe();
+
     proc = find_pid();
     if(!proc){
-        printk("Couldn't find process w/ PID %d", pid);
+        printk("Couldn't find process w/ PID %d. Exiting.", pid);
         return 0;
     }
-    get_everything(proc);
+    process = proc;
+    traverse_vmas(proc); // clear bits of existing page tables? maybe?
+
+
+    ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
+    hrtimer_init(&etx_hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+    etx_hr_timer.function = &timer_callback;
+    hrtimer_start( &etx_hr_timer, ktime, HRTIMER_MODE_REL);
+
+
     return 0;
 }
 
