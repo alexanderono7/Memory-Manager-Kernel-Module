@@ -8,7 +8,7 @@
 #include <linux/ktime.h>
 
 #define TIMEOUT_NSEC   ( 1000000000L )      //1 second in nano seconds
-#define TIMEOUT_SEC    ( 3 )                //4 seconds
+#define TIMEOUT_SEC    ( 2 )                //4 seconds
 
 static int pid = 0;
 static int rss_pages = 0;
