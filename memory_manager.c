@@ -8,25 +8,30 @@ static int pid = 0;
 // Receive arguments to the kernel module
 module_param(pid, int, 0644);
 
-int find_pid(void){
+// Find the process whose PID matches `pid` and return its task_struct ptr
+struct task_struct* find_pid(void){
     struct task_struct* p;
+    struct task_struct* result;
     
     for_each_process(p){
         if(p->pid == pid){
             printk("\nFOUND IT! : %d\n",p->pid);
+            result = p;
         }
-        printk("don't care: %d",p->pid);
+        //printk("don't care: %d",p->pid);
     }
-    return 0;
+    return result;
 }
 
 // Initialize kernel module
 int memman_init(void){
+    struct task_struct* proc;
     printk("Memory manager launched!\n");
-    find_pid();
+    proc = find_pid();
     return 0;
 }
 
+// Exit kernel module.
 void memman_exit(void){
     printk("Farewell!!!\n");
     return;
