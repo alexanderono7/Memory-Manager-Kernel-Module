@@ -5,6 +5,10 @@
 #include <linux/sched/signal.h>
 #include <linux/mm.h>
 #include <linux/hrtimer.h>
+#include <linux/ktime.h>
+
+#define TIMEOUT_NSEC   ( 1000000000L )      //1 second in nano seconds
+#define TIMEOUT_SEC    ( 3 )                //4 seconds
 
 static int pid = 0;
 static int rss_pages = 0;
@@ -188,10 +192,7 @@ int traverse_vmas(struct task_struct* task){
     return 0;
 }
 
-#define TIMEOUT_NSEC   ( 1000000000L )      //1 second in nano seconds
-#define TIMEOUT_SEC    ( 3 )                //4 seconds
 static struct hrtimer etx_hr_timer;
-
 
 void get_everything(struct task_struct* proc){
     int rss_size=0, swap_size=0, wss_size=0;
@@ -225,19 +226,19 @@ int memman_init(void){
     }
     process = proc;
     traverse_vmas(proc); // clear bits of existing page tables? maybe?
-
+    get_everything(process);
 
     ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
     hrtimer_init(&etx_hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
     etx_hr_timer.function = &timer_callback;
     hrtimer_start( &etx_hr_timer, ktime, HRTIMER_MODE_REL);
 
-
     return 0;
 }
 
 // Exit kernel module.
 void memman_exit(void){
+    hrtimer_cancel(&etx_hr_timer);
     printk("Farewell!!!\n");
     return;
 }
