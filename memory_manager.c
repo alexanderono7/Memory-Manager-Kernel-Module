@@ -23,11 +23,18 @@ struct task_struct* find_pid(void){
     return result;
 }
 
+// Traverse Memory regions (VMAs)?
+int traverse_vmas(struct task_struct* task){
+    task->mm->mmap;
+    return 0;
+}
+
 // Initialize kernel module
 int memman_init(void){
-    struct task_struct* proc;
     printk("Memory manager launched!\n");
+    struct task_struct* proc;
     proc = find_pid();
+    traverse_vmas(proc);
     return 0;
 }
 
@@ -37,6 +44,7 @@ void memman_exit(void){
     return;
 }
 
+// Run kernel module
 module_init(memman_init);
 module_exit(memman_exit);
 MODULE_LICENSE("GPL");
