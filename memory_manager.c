@@ -26,8 +26,11 @@ struct task_struct* find_pid(void){
 // Traverse Memory regions (VMAs)?
 int traverse_vmas(struct task_struct* task){
     struct vm_area_struct* vma;
+    int x;
+    x = PAGE_SIZE;
+    printk("%d",x);
     vma = task->mm->mmap;
-    printk("%lu", vma->vm_start);
+    //printk("%lu", vma->vm_start);
     //printk("\n\n\n\n");
     //printk("%lu", vma->vm_next->vm_start);
     //printk("%d", vma->vm_end);
