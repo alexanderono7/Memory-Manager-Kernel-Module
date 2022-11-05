@@ -8,7 +8,7 @@
 #include <linux/ktime.h>
 
 #define TIMEOUT_NSEC   ( 1000000000L )      //1 second in nano seconds
-#define TIMEOUT_SEC    ( 2 )                //4 seconds
+#define TIMEOUT_SEC    ( 10 )                //4 seconds
 
 static int pid = 0;
 static int rss_pages = 0;
@@ -196,6 +196,9 @@ static struct hrtimer etx_hr_timer;
 
 void get_everything(struct task_struct* proc){
     int rss_size=0, swap_size=0, wss_size=0;
+    rss_pages=0;
+    swap_pages=0;
+    wss_pages=0;
     traverse_vmas(proc);
     rss_size  = rss_pages * PAGE_SIZE;
     swap_size = swap_pages * PAGE_SIZE;
