@@ -16,9 +16,13 @@ void probe(void){
             if(p->mm->mmap){
                 printk("valid: process # %d", p->pid);
                 if(p->mm->mmap->vm_start){
-                    unsigned long x;
-                    x = p->mm->mmap->vm_start;
-                    printk("%lu", x);
+                    unsigned long start = p->mm->mmap->vm_start;
+                    unsigned long end = p->mm->mmap->vm_end;
+                    printk("starting addr: %p", (void*)(p->mm->mmap->vm_start));
+                    printk("ending addr: %p", (void*)(p->mm->mmap->vm_end));
+                    printk("diff: %lu", end-start);
+                    printk("# pages?: %lu", (end-start)/PAGE_SIZE);
+                    printk("remainder?: %lu", (end-start)%PAGE_SIZE);
                 }
             }
         }
