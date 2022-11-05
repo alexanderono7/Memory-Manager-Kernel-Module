@@ -16,4 +16,6 @@ void memman_exit(void){
     return;
 }
 
-
+module_init(memman_init);
+module_exit(memman_exit);
+MODULE_LICENSE("GPL");
