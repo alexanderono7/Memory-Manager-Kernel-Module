@@ -1,5 +1,6 @@
-.swp
-.mod
-.mod.c
-.o
-.order
+*.swp
+*.mod
+*.mod.c
+*.o
+*.order
+*.cmd

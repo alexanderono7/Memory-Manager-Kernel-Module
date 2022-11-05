@@ -13,4 +13,7 @@ int memman_init(void){
 
 void memman_exit(void){
     printk("Farewell!!!\n");
+    return;
 }
+
+
