@@ -7,8 +7,10 @@
 #include <linux/hrtimer.h>
 #include <linux/ktime.h>
 
-#define TIMEOUT_NSEC   ( 1000000000L )      //1 second in nano seconds
-#define TIMEOUT_SEC    ( 9 )                //10 seconds (?)
+//#define TIMEOUT_NSEC   ( 1000000000L )      //1 second in nano seconds
+//#define TIMEOUT_SEC    ( 9 )                //10 seconds (?)
+#define TIMEOUT_NSEC   ( 0 )      //1 second in nano seconds
+#define TIMEOUT_SEC    ( 10 )                //10 seconds (?)
 
 static int pid = 0;
 static unsigned int rss_pages = 0;
@@ -59,10 +61,10 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
 
     ptep = pte_offset_map(pmd, address); // get pte from pmd and the page address
     wss_pages += ptep_test_and_clear_young(mm->mmap, address, ptep);
-    if (!ptep) return NULL;
+    if (!ptep || pte_none(*ptep)) return NULL;
 
     pte = *ptep;
-    if(pte_present(*ptep) && !pte_none(*ptep)){ 
+    if(pte_present(*ptep)){ 
         rss_pages++;
     }else{
         swap_pages++;
