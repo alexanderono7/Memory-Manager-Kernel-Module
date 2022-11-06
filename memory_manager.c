@@ -52,45 +52,20 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
     pte_t *result = NULL;
 
     pgd = pgd_offset(mm, address); // get pgd from mm and the page address
-    if (pgd_none(*pgd) || pgd_bad(*pgd)) {
-        // check if pgd is bad or does not exist
-        return NULL;
-    }else{
-        //printk("pgd is good!");
-    }
+    if (pgd_none(*pgd) || pgd_bad(*pgd)) return NULL;
 
     p4d = p4d_offset(pgd, address); //get p4d from from pgd and the page address
-    if (p4d_none(*p4d) || p4d_bad(*p4d)) {
-        // check if p4d is bad or does not exist
-        return NULL;
-    }else{
-        //printk("p4d is good!");
-    }
+    if (p4d_none(*p4d) || p4d_bad(*p4d)) return NULL;
 
     pud = pud_offset(p4d, address); // get pud from from p4d and the page address
-    if (pud_none(*pud) || pud_bad(*pud)) {
-        // check if pud is bad or does not exist
-        //return;
-        return NULL;
-    }else{
-        //printk("pud is good!");
-    }
+    if (pud_none(*pud) || pud_bad(*pud)) return NULL;
 
     pmd = pmd_offset(pud, address); // get pmd from from pud and the page address
-    if (pmd_none(*pmd) || pmd_bad(*pmd)) {
-        // check if pmd is bad or does not exist
-        return NULL;
-    }else{
-        //printk("pmd is good!");
-    }
+    if (pmd_none(*pmd) || pmd_bad(*pmd)) return NULL;
+    
 
     ptep = pte_offset_map(pmd, address); // get pte from pmd and the page address
-    if (!ptep){
-        // check if pte does not exist
-        return NULL;
-    }else{
-        //printk("pte is good!");
-    }
+    if (!ptep) return NULL;
 
     pte = *ptep; //is this necessary??
     result = ptep;
