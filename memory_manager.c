@@ -97,7 +97,7 @@ void traverse_vmas(struct task_struct* task){
     while(1){
         start = foo->vm_start;
         end = foo->vm_end;
-        for(i = start+PAGE_SIZE*10000; i < end; i+=PAGE_SIZE){
+        for(i = start; i < end; i+=PAGE_SIZE){
             access_page(task->mm, i);
         }
         if(foo->vm_next == NULL) return;
