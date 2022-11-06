@@ -27,7 +27,8 @@ int ptep_test_and_clear_young(struct vm_area_struct *vma, unsigned long addr, pt
     int ret = 0;
     if (pte_young(*ptep)){
         ret = test_and_clear_bit(_PAGE_BIT_ACCESSED, (unsigned long *) &ptep->pte);
-        wss_pages++;
+        //wss_pages++;
+        rss_pages++;
     }
     return ret;
 }
@@ -44,7 +45,7 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
     pte_t *ptep, pte;
     pte_t *result = NULL;
 
-    swap_pages++;
+    //swap_pages++;
 
     pgd = pgd_offset(mm, address); // get pgd from mm and the page address
     if (pgd_none(*pgd) || pgd_bad(*pgd)) {
@@ -94,8 +95,8 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
 
     pte = *ptep; //is this necessary??
     result = ptep;
-    rss_pages++;
-    swap_pages--;
+    //rss_pages++;
+    //swap_pages--;
     ptep_test_and_clear_young(mm->mmap, address, result);
 
     return result;
