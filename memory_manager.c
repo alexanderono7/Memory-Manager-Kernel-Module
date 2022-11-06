@@ -61,12 +61,12 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
     if (!ptep || pte_none(*ptep)) return NULL;
 
     pte = *ptep;
-    ptep_test_and_clear_young(mm->mmap, address, &pte);
     if(pte_present(pte)){ 
         rss_pages++;
     }else{
         swap_pages++;
     }
+    ptep_test_and_clear_young(mm->mmap, address, &pte);
     return result;
 }
 
@@ -103,7 +103,7 @@ void traverse_vmas(struct task_struct* task){
 
 
 void get_everything(struct task_struct* proc){
-    int rss_size, swap_size, wss_size;
+    int rss_size=0, swap_size=0, wss_size=0;
     rss_pages=0;
     swap_pages=0;
     wss_pages=0;
@@ -135,7 +135,7 @@ int memman_init(void){
         return 0;
     }
     process = proc;
-    //traverse_vmas(proc); // clear bits of existing page tables? maybe?
+    //traverse_vmas(proc); // clear bits of existing page tables? maybe? (prob not)
 
     ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
     hrtimer_init(&etx_hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
