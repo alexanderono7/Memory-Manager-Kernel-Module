@@ -20,6 +20,7 @@ int ptep_test_and_clear_young (struct vm_area_struct *vma, unsigned long addr, p
 /* Test and clear the accessed bit of a given pte entry. vma is the pointer
 to the memory region, addr is the address of the page, and ptep is a pointer
 to a pte. It returns 1 if the pte was accessed, or 0 if not accessed. */
+
 /* The ptep_test_and_clear_young() is architecture dependent and is not
 exported to be used in a kernel module. You will need to add its
 implementation as follows to your kernel module. */
@@ -28,8 +29,8 @@ int ptep_test_and_clear_young(struct vm_area_struct *vma, unsigned long addr, pt
     int x = 0;
     if (pte_young(*ptep)){
         ret = test_and_clear_bit(_PAGE_BIT_ACCESSED, (unsigned long *) &ptep->pte);
-        x = test_and_clear_bit(_PAGE_BIT_PRESENT, (unsigned long *) &ptep->pte);
-        //wss_pages++;
+        //printk("%p", (void*)ptep); // print PTE address
+        printk("%lu", *(unsigned long*)ptep); // print PTE value?
         rss_pages++;
     }
     return ret;
@@ -193,7 +194,7 @@ int memman_init(void){
 
 // Exit kernel module.
 void memman_exit(void){
-    hrtimer_cancel(&etx_hr_timer);
+    //hrtimer_cancel(&etx_hr_timer);
     printk("Farewell!!!\n");
     return;
 }
