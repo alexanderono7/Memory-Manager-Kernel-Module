@@ -7,8 +7,8 @@
 #include <linux/hrtimer.h>
 #include <linux/ktime.h>
 
-#define TIMEOUT_NSEC   ( 0 )      //1 second in nano seconds
-#define TIMEOUT_SEC    ( 10 )                //10 seconds (?)
+#define TIMEOUT_NSEC   ( 1000000000L )      //1 second in nano seconds
+#define TIMEOUT_SEC    ( 9 )                //10 seconds (?)
 
 static int pid = 0;
 static unsigned int rss_pages = 0;
