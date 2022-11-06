@@ -26,12 +26,6 @@ exported to be used in a kernel module. You will need to add its
 implementation as follows to your kernel module. */
 int ptep_test_and_clear_young(struct vm_area_struct *vma, unsigned long addr, pte_t *ptep) {
     int ret = 0;
-    if(pte_present(*ptep)){
-        rss_pages++;
-    }else{
-        if(!pte_none(*ptep))
-            swap_pages++;
-    }
     if (pte_young(*ptep)){
         ret = test_and_clear_bit(_PAGE_BIT_ACCESSED, (unsigned long *) &ptep->pte); //returns 1 if pte accessed
         if(ret) wss_pages++;
@@ -113,9 +107,9 @@ void get_everything(struct task_struct* proc){
     swap_pages=0;
     wss_pages=0;
     traverse_vmas(proc);
-    rss_size  = (rss_pages * PAGE_SIZE)/1000;
-    swap_size = (swap_pages * PAGE_SIZE)/1000;
-    wss_size  = (wss_pages * PAGE_SIZE)/1000;
+    rss_size  = (rss_pages * PAGE_SIZE)/1024;
+    swap_size = (swap_pages * PAGE_SIZE)/1024;
+    wss_size  = (wss_pages * PAGE_SIZE)/1024;
     printk("PID %d: RSS=%d KB, SWAP=%d KB, WSS=%d KB", pid, rss_size, swap_size, wss_size);
 }
 
