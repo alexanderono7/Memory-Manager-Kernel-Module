@@ -105,7 +105,6 @@ struct task_struct* find_pid(void){
     
     for_each_process(p){
         if(p->pid == pid){
-            //printk("\nFOUND IT! : %d\n",p->pid);
             result = p;
         }
     }
@@ -114,25 +113,19 @@ struct task_struct* find_pid(void){
 
 // Traverse Memory regions (VMAs)?
 int traverse_vmas(struct task_struct* task){
-    if(task->mm){
-        if(task->mm->mmap){
-            if(task->mm->mmap->vm_start){
-                unsigned long start = task->mm->mmap->vm_start; // get starting addr of memory region (vma)
-                unsigned long end = task->mm->mmap->vm_end; // get ending addr of memory region
-                unsigned long i; // iterator
-                struct vm_area_struct* foo;
+    // Do not run this function unless you know the task is valid, otherwise your kernel module will be stuck.
+    struct vm_area_struct* foo = task->mm->mmap;
+    unsigned long start = foo->vm_start; // get starting addr of memory region (vma)
+    unsigned long end = foo->vm_end; // get ending addr of memory region
+    unsigned long i; // iterator
 
-                foo = task->mm->mmap;
-                while(foo){
-                    start = foo->vm_start;
-                    end = foo->vm_end;
-                    for(i = start; i <= end; i+=PAGE_SIZE){
-                        access_page(task->mm, i);
-                    }
-                    foo = foo->vm_next; // move to next vma (if it exists)
-                }
-            }
+    while(foo){
+        start = foo->vm_start;
+        end = foo->vm_end;
+        for(i = start; i <= end; i+=PAGE_SIZE){
+            access_page(task->mm, i);
         }
+        foo = foo->vm_next; // move to next vma (if it exists)
     }
     return 0;
 }
