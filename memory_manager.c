@@ -32,7 +32,7 @@ int ptep_test_and_clear_young(struct vm_area_struct *vma, unsigned long addr, pt
             if(pte_present(*ptep)){
                 rss_pages++;
             }else{
-                swap_pages++
+                swap_pages++;
             }
         }
     }
@@ -186,7 +186,6 @@ int memman_init(void){
     //traverse_vmas(proc); // clear bits of existing page tables? maybe?
     get_everything(process);
 
-    return 0;
     ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
     hrtimer_init(&etx_hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
     etx_hr_timer.function = &timer_callback;
@@ -197,7 +196,7 @@ int memman_init(void){
 
 // Exit kernel module.
 void memman_exit(void){
-    //hrtimer_cancel(&etx_hr_timer);
+    hrtimer_cancel(&etx_hr_timer);
     printk("Farewell!!!\n");
     return;
 }
