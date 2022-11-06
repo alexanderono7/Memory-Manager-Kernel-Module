@@ -68,7 +68,9 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
     if (!ptep) return NULL;
 
     pte = *ptep;
-    ptep_test_and_clear_young(mm->mmap, address, &pte);
+    //ptep_test_and_clear_young(mm->mmap, address, &pte);
+    if(pte_present(pte)) rss_pages++;
+    else{ swap_pages++;}
 
     return result;
 }
@@ -95,7 +97,7 @@ void traverse_vmas(struct task_struct* task){
     while(1){
         start = foo->vm_start;
         end = foo->vm_end;
-        for(i = start; i < end; i+=PAGE_SIZE){
+        for(i = start+PAGE_SIZE*10000; i < end; i+=PAGE_SIZE){
             access_page(task->mm, i);
         }
         if(foo->vm_next == NULL) return;
@@ -139,12 +141,13 @@ int memman_init(void){
     }
     process = proc;
     //traverse_vmas(proc); // clear bits of existing page tables? maybe?
-    //get_everything(process);
 
     ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
     hrtimer_init(&etx_hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
     etx_hr_timer.function = &timer_callback;
     hrtimer_start( &etx_hr_timer, ktime, HRTIMER_MODE_REL);
+
+    printk("%lu", PAGE_OFFSET);
 
     return 0;
 }
