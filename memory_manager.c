@@ -7,8 +7,8 @@
 #include <linux/hrtimer.h>
 #include <linux/ktime.h>
 
-#define TIMEOUT_NSEC   ( 1000000000L )      //1 second in nano seconds
-#define TIMEOUT_SEC    ( 9 )                //10 seconds (?)
+#define TIMEOUT_NSEC   ( 0 )      //1 second in nano seconds
+#define TIMEOUT_SEC    ( 10 )                //10 seconds (?)
 
 static int pid = 0;
 static unsigned int rss_pages = 0;
@@ -26,6 +26,12 @@ exported to be used in a kernel module. You will need to add its
 implementation as follows to your kernel module. */
 int ptep_test_and_clear_young(struct vm_area_struct *vma, unsigned long addr, pte_t *ptep) {
     int ret = 0;
+    if(pte_present(*ptep)){ 
+        rss_pages++;
+    }else{
+        swap_pages++;
+    }
+
     if (pte_young(*ptep)){
         ret = test_and_clear_bit(_PAGE_BIT_ACCESSED, (unsigned long *) &ptep->pte); //returns 1 if pte accessed
         if(ret) wss_pages++;
@@ -58,17 +64,10 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
     if (pmd_none(*pmd) || pmd_bad(*pmd)) return NULL;
 
     ptep = pte_offset_map(pmd, address); // get pte from pmd and the page address
-    if (!ptep) return NULL;
+    if (!ptep || pte_none(*ptep)) return NULL;
 
     pte = *ptep;
-    if(!pte_none(*ptep)){
-        if(pte_present(pte)){ 
-            rss_pages++;
-        }else{
-            swap_pages++;
-        }
     ptep_test_and_clear_young(mm->mmap, address, &pte);
-    }
     return result;
 }
 
