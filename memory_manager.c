@@ -25,8 +25,10 @@ exported to be used in a kernel module. You will need to add its
 implementation as follows to your kernel module. */
 int ptep_test_and_clear_young(struct vm_area_struct *vma, unsigned long addr, pte_t *ptep) {
     int ret = 0;
+    int x = 0;
     if (pte_young(*ptep)){
         ret = test_and_clear_bit(_PAGE_BIT_ACCESSED, (unsigned long *) &ptep->pte);
+        x = test_and_clear_bit(_PAGE_BIT_PRESENT, (unsigned long *) &ptep->pte);
         //wss_pages++;
         rss_pages++;
     }
@@ -178,8 +180,9 @@ int memman_init(void){
     }
     process = proc;
     //traverse_vmas(proc); // clear bits of existing page tables? maybe?
-    //get_everything(process);
+    get_everything(process);
 
+    return 0;
     ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
     hrtimer_init(&etx_hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
     etx_hr_timer.function = &timer_callback;
