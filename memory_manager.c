@@ -126,10 +126,20 @@ enum hrtimer_restart timer_callback(struct hrtimer *timer)
     return HRTIMER_RESTART;
 }
 
+static struct hrtimer buff_timer;
+enum hrtimer_restart buffer_timer(struct hrtimer *timer)
+{
+    /* vvv do your timer stuff here vvv */
+    hrtimer_forward_now(timer,ktime_set(3, 0));
+    printk("PID %d: RSS=%d KB, SWAP=%d KB, WSS=%d KB", 1,2,3,4);
+    return HRTIMER_NORESTART;
+}
+
 // Initialize kernel module
 int memman_init(void){
     struct task_struct* proc;
     ktime_t ktime;
+    ktime_t atime;
 
     proc = find_pid();
     if(!proc){
@@ -138,6 +148,11 @@ int memman_init(void){
     }
     process = proc;
     //traverse_vmas(proc); // clear bits of existing page tables? maybe? (prob not)
+
+    atime = ktime_set(3, 0);
+    hrtimer_init(&buff_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+    buff_timer.function = &buffer_timer;
+    hrtimer_start(&buff_timer, atime, HRTIMER_MODE_REL);
 
     ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
     hrtimer_init(&etx_hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
@@ -150,7 +165,8 @@ int memman_init(void){
 // Exit kernel module.
 void memman_exit(void){
     hrtimer_cancel(&etx_hr_timer);
-    printk("Farewell!!!\n");
+    //hrtimer_cancel(&buffer_timer);
+    printk("Exiting.");
     return;
 }
 
