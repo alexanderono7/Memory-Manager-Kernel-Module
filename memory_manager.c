@@ -104,7 +104,6 @@ void traverse_vmas(struct task_struct* task){
     return;
 }
 
-static struct hrtimer etx_hr_timer;
 
 void get_everything(struct task_struct* proc){
     int rss_size=0, swap_size=0, wss_size=0;
@@ -119,6 +118,7 @@ void get_everything(struct task_struct* proc){
 }
 
 //Timer Callback function. This will be called when timer expires
+static struct hrtimer etx_hr_timer;
 enum hrtimer_restart timer_callback(struct hrtimer *timer)
 {
     /* vvv do your timer stuff here vvv */
