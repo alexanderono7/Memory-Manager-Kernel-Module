@@ -7,10 +7,10 @@
 #include <linux/hrtimer.h>
 #include <linux/ktime.h>
 
-#define TIMEOUT_NSEC   ( 1000000000L )      //1 second in nano seconds
-#define TIMEOUT_SEC    ( 9 )                //10 seconds (?)
-//#define TIMEOUT_NSEC   ( 0 )      //1 second in nano seconds
-//#define TIMEOUT_SEC    ( 10 )                //10 seconds (?)
+//#define TIMEOUT_NSEC   ( 1000000000L )      //1 second in nano seconds
+//#define TIMEOUT_SEC    ( 9 )                //10 seconds (?)
+#define TIMEOUT_NSEC   ( 0 )      //1 second in nano seconds
+#define TIMEOUT_SEC    ( 10 )                //10 seconds (?)
 
 static int pid = 0;
 static unsigned int rss_pages = 0;
@@ -121,8 +121,8 @@ static struct hrtimer etx_hr_timer;
 enum hrtimer_restart timer_callback(struct hrtimer *timer)
 {
     /* vvv do your timer stuff here vvv */
-    get_everything(process);
     hrtimer_forward_now(timer,ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC));
+    get_everything(process);
     return HRTIMER_RESTART;
 }
 
@@ -142,7 +142,7 @@ int memman_init(void){
     ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
     hrtimer_init(&etx_hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
     etx_hr_timer.function = &timer_callback;
-    hrtimer_start( &etx_hr_timer, ktime, HRTIMER_MODE_REL);
+    hrtimer_start(&etx_hr_timer, ktime, HRTIMER_MODE_REL);
 
     return 0;
 }
