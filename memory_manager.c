@@ -28,9 +28,11 @@ int ptep_test_and_clear_young(struct vm_area_struct *vma, unsigned long addr, pt
     int ret = 0;
     int x = 0;
     if (pte_young(*ptep)){
-        ret = test_and_clear_bit(_PAGE_BIT_ACCESSED, (unsigned long *) &ptep->pte);
+        ret = test_and_clear_bit(_PAGE_BIT_ACCESSED, (unsigned long *) &ptep->pte); //returns 1 if pte accessed
         //printk("%p", (void*)ptep); // print PTE address
-        printk("%lu", *(unsigned long*)ptep); // print PTE value?
+        //printk("%lu", *(unsigned long*)ptep); // print PTE value?
+        x = pte_present(ptep);
+        printk("%d",x);
         rss_pages++;
     }
     return ret;
