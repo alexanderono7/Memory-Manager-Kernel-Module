@@ -11,9 +11,9 @@
 #define TIMEOUT_SEC    ( 9 )                //10 seconds (?)
 
 static int pid = 0;
-static int rss_pages = 0;
-static int swap_pages = 0;
-static int wss_pages = 0;
+static unsigned int rss_pages = 0;
+static unsigned int swap_pages = 0;
+static unsigned int wss_pages = 0;
 struct task_struct* process;
 
 int ptep_test_and_clear_young (struct vm_area_struct *vma, unsigned long addr, pte_t *ptep);
@@ -67,9 +67,8 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
     ptep = pte_offset_map(pmd, address); // get pte from pmd and the page address
     if (!ptep) return NULL;
 
-    pte = *ptep; //is this necessary??
-    result = ptep;
-    ptep_test_and_clear_young(mm->mmap, address, result);
+    pte = *ptep;
+    ptep_test_and_clear_young(mm->mmap, address, &pte);
 
     return result;
 }
@@ -91,9 +90,7 @@ struct task_struct* find_pid(void){
 void traverse_vmas(struct task_struct* task){
     // Do not run this function unless you know the task is valid, otherwise your kernel module will be stuck.
     struct vm_area_struct* foo = task->mm->mmap;
-    unsigned long start = foo->vm_start; // get starting addr of memory region (vma)
-    unsigned long end = foo->vm_end; // get ending addr of memory region
-    unsigned long i; // iterator
+    unsigned long start, end, i; // starting addr of memory region, ending addr, iterator value
 
     while(1){
         start = foo->vm_start;
