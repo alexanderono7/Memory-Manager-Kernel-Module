@@ -65,7 +65,7 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
     
 
     ptep = pte_offset_map(pmd, address); // get pte from pmd and the page address
-    if (!ptep) return NULL;
+    if (!ptep || pte_none(*ptep)) return NULL;
 
     pte = *ptep;
     //ptep_test_and_clear_young(mm->mmap, address, &pte);
@@ -146,8 +146,6 @@ int memman_init(void){
     hrtimer_init(&etx_hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
     etx_hr_timer.function = &timer_callback;
     hrtimer_start( &etx_hr_timer, ktime, HRTIMER_MODE_REL);
-
-    printk("%lu", PAGE_OFFSET);
 
     return 0;
 }
