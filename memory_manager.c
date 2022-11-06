@@ -1,3 +1,4 @@
+// Alexander Ono
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/kthread.h>
@@ -8,9 +9,9 @@
 #include <linux/ktime.h>
 
 //#define TIMEOUT_NSEC   ( 1000000000L )      //1 second in nano seconds
-//#define TIMEOUT_SEC    ( 9 )                //10 seconds (?)
-#define TIMEOUT_NSEC   ( 0 )      //1 second in nano seconds
-#define TIMEOUT_SEC    ( 10 )                //10 seconds (?)
+//#define TIMEOUT_SEC    ( 9 )                //9 seconds
+#define TIMEOUT_NSEC   ( 0 )      //0 second in nano seconds
+#define TIMEOUT_SEC    ( 10 )                //10 seconds
 
 static int pid = 0;
 static unsigned int rss_pages = 0;
@@ -18,7 +19,6 @@ static unsigned int swap_pages = 0;
 static unsigned int wss_pages = 0;
 struct task_struct* process;
 
-int ptep_test_and_clear_young (struct vm_area_struct *vma, unsigned long addr, pte_t *ptep);
 /* Test and clear the accessed bit of a given pte entry. vma is the pointer
 to the memory region, addr is the address of the page, and ptep is a pointer
 to a pte. It returns 1 if the pte was accessed, or 0 if not accessed. */
@@ -28,9 +28,9 @@ exported to be used in a kernel module. You will need to add its
 implementation as follows to your kernel module. */
 int ptep_test_and_clear_young(struct vm_area_struct *vma, unsigned long addr, pte_t *ptep) {
     int ret = 0;
-    //if (pte_young(*ptep)){
-        ret = test_and_clear_bit(_PAGE_BIT_ACCESSED, (unsigned long *) &ptep->pte); //returns 1 if pte accessed
-    //}
+    if (pte_young(*ptep)){
+      ret = test_and_clear_bit(_PAGE_BIT_ACCESSED, (unsigned long *) &ptep->pte); //returns 1 if pte accessed
+    }
 
     return ret;
 }
@@ -38,7 +38,7 @@ int ptep_test_and_clear_young(struct vm_area_struct *vma, unsigned long addr, pt
 // Receive arguments to the kernel module
 module_param(pid, int, 0644);
 
-// experimental function - access a page? idk.
+// "Page table walk" - given mm and addr, walk to its page table entry (quit midway if it isn't valid).
 pte_t* access_page(struct mm_struct* mm, unsigned long address){
     pgd_t *pgd;
     p4d_t *p4d;
@@ -76,7 +76,8 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
 struct task_struct* find_pid(void){
     struct task_struct* p;
     struct task_struct* result = NULL;
-    
+
+    // Iterate through task list
     for_each_process(p){
         if(p->pid == pid){
             result = p;
@@ -85,15 +86,18 @@ struct task_struct* find_pid(void){
     return result;
 }
 
-// Traverse Memory regions (VMAs)?
+// Traverse Memory regions (VMAs).
 void traverse_vmas(struct task_struct* task){
     // Do not run this function unless you know the task is valid, otherwise your kernel module will be stuck.
     struct vm_area_struct* foo = task->mm->mmap;
     unsigned long start, end, i; // starting addr of memory region, ending addr, iterator value
 
+    // Iterate through VMAs Linked List as long as next VMA exists.
     while(1){
         start = foo->vm_start;
         end = foo->vm_end;
+
+        // Iterate through the memory region of a VMA
         for(i = start; i < end; i+=PAGE_SIZE){
             access_page(task->mm, i);
         }
@@ -103,25 +107,27 @@ void traverse_vmas(struct task_struct* task){
     return;
 }
 
-
+// Get Kibibytes of RSS, SWAP, and WSS and print them to kernel ring buffer.
 void get_everything(struct task_struct* proc){
     int rss_size=0, swap_size=0, wss_size=0;
-    rss_pages=0;
+    rss_pages=0; // number of pages in RSS
     swap_pages=0;
     wss_pages=0;
-    traverse_vmas(proc);
-    rss_size  = (rss_pages * PAGE_SIZE)/1024;
+
+    traverse_vmas(proc); 
+
+    rss_size  = (rss_pages * PAGE_SIZE)/1024; // size of RSS in Kibibytes
     swap_size = (swap_pages * PAGE_SIZE)/1024;
     wss_size  = (wss_pages * PAGE_SIZE)/1024;
     printk("PID %d: RSS=%d KB, SWAP=%d KB, WSS=%d KB", pid, rss_size, swap_size, wss_size);
 }
 
-//Timer Callback function. This will be called when timer expires
+//Timer Callback function. This will be called when timer expires. Executes every 10 seconds until rmmod is called.
 static struct hrtimer etx_hr_timer;
 enum hrtimer_restart timer_callback(struct hrtimer *timer)
 {
-    /* vvv do your timer stuff here vvv */
     hrtimer_forward_now(timer,ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC));
+    /* vvv do your timer stuff here vvv */
     get_everything(process);
     return HRTIMER_RESTART;
 }
@@ -131,14 +137,15 @@ int memman_init(void){
     struct task_struct* proc;
     ktime_t ktime;
 
+    // Retrieve task_struct of PID (if it exists - otherwise quit).
     proc = find_pid();
     if(!proc){
         printk("Couldn't find process w/ PID %d. Exiting.", pid);
         return 0;
     }
     process = proc;
-    //traverse_vmas(proc); // clear bits of existing page tables? maybe? (prob not)
 
+    // Begin timer loop
     ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
     hrtimer_init(&etx_hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
     etx_hr_timer.function = &timer_callback;
@@ -149,7 +156,7 @@ int memman_init(void){
 
 // Exit kernel module.
 void memman_exit(void){
-    hrtimer_cancel(&etx_hr_timer);
+    hrtimer_cancel(&etx_hr_timer); // stop timer
     printk("Exiting.");
     return;
 }
