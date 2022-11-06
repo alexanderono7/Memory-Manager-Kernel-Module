@@ -59,7 +59,7 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
 
     ptep = pte_offset_map(pmd, address); // get pte from pmd and the page address
     wss_pages += ptep_test_and_clear_young(mm->mmap, address, ptep);
-    if (!ptep) return NULL;
+    if (!ptep || pte_none(*ptep)) return NULL;
 
     pte = *ptep;
     if(pte_present(*ptep)){ 
