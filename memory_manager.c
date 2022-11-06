@@ -28,16 +28,7 @@ int ptep_test_and_clear_young(struct vm_area_struct *vma, unsigned long addr, pt
     int ret = 0;
     if (pte_young(*ptep)){
         ret = test_and_clear_bit(_PAGE_BIT_ACCESSED, (unsigned long *) &ptep->pte); //returns 1 if pte accessed
-        if(ret) wss_pages++;
     }
-    //if(!pte_none(*ptep)){
-        if(pte_present(*ptep)){ 
-            rss_pages++;
-        }else{
-            swap_pages++;
-        }
-    //}
-    pte_mkyoung(*ptep);
 
     return ret;
 }
@@ -67,10 +58,15 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
     if (pmd_none(*pmd) || pmd_bad(*pmd)) return NULL;
 
     ptep = pte_offset_map(pmd, address); // get pte from pmd and the page address
+    ptep_test_and_clear_young(mm->mmap, address, ptep);
     if (!ptep) return NULL;
 
     pte = *ptep;
-    ptep_test_and_clear_young(mm->mmap, address, &pte);
+    if(pte_present(*ptep)){ 
+        rss_pages++;
+    }else{
+        swap_pages++;
+    }
     return result;
 }
 
