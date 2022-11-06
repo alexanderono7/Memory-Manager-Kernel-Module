@@ -26,7 +26,7 @@ exported to be used in a kernel module. You will need to add its
 implementation as follows to your kernel module. */
 int ptep_test_and_clear_young(struct vm_area_struct *vma, unsigned long addr, pte_t *ptep) {
     int ret = 0;
-    if(pte_present(*ptep) && !pte_none(*ptep)){
+    if(pte_present(*ptep)){
         rss_pages++;
     }else{
         if(!pte_none(*ptep))
@@ -131,7 +131,6 @@ enum hrtimer_restart timer_callback(struct hrtimer *timer)
 int memman_init(void){
     struct task_struct* proc;
     ktime_t ktime;
-    //probe();
 
     proc = find_pid();
     if(!proc){
