@@ -50,12 +50,9 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
     pte_t *ptep, pte;
     pte_t *result = NULL;
 
-    //swap_pages++;
-
     pgd = pgd_offset(mm, address); // get pgd from mm and the page address
     if (pgd_none(*pgd) || pgd_bad(*pgd)) {
         // check if pgd is bad or does not exist
-        //printk("pgd is bad or does not exist");
         return NULL;
     }else{
         //printk("pgd is good!");
@@ -64,7 +61,6 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
     p4d = p4d_offset(pgd, address); //get p4d from from pgd and the page address
     if (p4d_none(*p4d) || p4d_bad(*p4d)) {
         // check if p4d is bad or does not exist
-        //printk("p4d is bad or does not exist");
         return NULL;
     }else{
         //printk("p4d is good!");
@@ -73,7 +69,6 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
     pud = pud_offset(p4d, address); // get pud from from p4d and the page address
     if (pud_none(*pud) || pud_bad(*pud)) {
         // check if pud is bad or does not exist
-        //printk("pud is bad or does not exist");
         //return;
         return NULL;
     }else{
@@ -83,7 +78,6 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
     pmd = pmd_offset(pud, address); // get pmd from from pud and the page address
     if (pmd_none(*pmd) || pmd_bad(*pmd)) {
         // check if pmd is bad or does not exist
-        //printk("pmd is bad or does not exist");
         return NULL;
     }else{
         //printk("pmd is good!");
@@ -92,7 +86,6 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
     ptep = pte_offset_map(pmd, address); // get pte from pmd and the page address
     if (!ptep){
         // check if pte does not exist
-        //printk("pte is bad or does not exist");
         return NULL;
     }else{
         //printk("pte is good!");
@@ -100,8 +93,6 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
 
     pte = *ptep; //is this necessary??
     result = ptep;
-    //rss_pages++;
-    //swap_pages--;
     ptep_test_and_clear_young(mm->mmap, address, result);
 
     return result;
@@ -163,7 +154,6 @@ void get_everything(struct task_struct* proc){
 //Timer Callback function. This will be called when timer expires
 enum hrtimer_restart timer_callback(struct hrtimer *timer)
 {
-    //pr_info("Timer Callback function Called [%d]\n",count++);
     /* vvv do your timer stuff here vvv */
     get_everything(process);
     hrtimer_forward_now(timer,ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC));
