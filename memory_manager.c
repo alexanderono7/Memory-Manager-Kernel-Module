@@ -8,7 +8,7 @@
 #include <linux/ktime.h>
 
 #define TIMEOUT_NSEC   ( 1000000000L )      //1 second in nano seconds
-#define TIMEOUT_SEC    ( 10 )                //4 seconds
+#define TIMEOUT_SEC    ( 9 )                //4 seconds
 
 static int pid = 0;
 static int rss_pages = 0;
@@ -149,9 +149,9 @@ void get_everything(struct task_struct* proc){
     swap_pages=0;
     wss_pages=0;
     traverse_vmas(proc);
-    rss_size  = rss_pages * PAGE_SIZE;
-    swap_size = swap_pages * PAGE_SIZE;
-    wss_size  = wss_pages * PAGE_SIZE;
+    rss_size  = (rss_pages * PAGE_SIZE)/1000;
+    swap_size = (swap_pages * PAGE_SIZE)/1000;
+    wss_size  = (wss_pages * PAGE_SIZE)/1000;
     printk("PID %d: RSS=%d KB, SWAP=%d KB, WSS=%d KB", pid, rss_size, swap_size, wss_size);
 }
 
@@ -178,7 +178,7 @@ int memman_init(void){
     }
     process = proc;
     //traverse_vmas(proc); // clear bits of existing page tables? maybe?
-    get_everything(process);
+    //get_everything(process);
 
     ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
     hrtimer_init(&etx_hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
