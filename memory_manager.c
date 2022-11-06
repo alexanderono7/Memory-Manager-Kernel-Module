@@ -7,8 +7,8 @@
 #include <linux/hrtimer.h>
 #include <linux/ktime.h>
 
-#define TIMEOUT_NSEC   ( 1000000000L )      //1 second in nano seconds
-#define TIMEOUT_SEC    ( 9 )                //10 seconds (?)
+#define TIMEOUT_NSEC   ( 0 )      //1 second in nano seconds
+#define TIMEOUT_SEC    ( 10 )                //10 seconds (?)
 
 static int pid = 0;
 static unsigned int rss_pages = 0;
@@ -56,16 +56,17 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
 
     pmd = pmd_offset(pud, address); // get pmd from from pud and the page address
     if (pmd_none(*pmd) || pmd_bad(*pmd)) return NULL;
-    
 
     ptep = pte_offset_map(pmd, address); // get pte from pmd and the page address
     if (!ptep || pte_none(*ptep)) return NULL;
 
     pte = *ptep;
-    //ptep_test_and_clear_young(mm->mmap, address, &pte);
-    if(pte_present(pte)) rss_pages++;
-    else{ swap_pages++;}
-
+    ptep_test_and_clear_young(mm->mmap, address, &pte);
+    if(pte_present(pte)){ 
+        rss_pages++;
+    }else{
+        swap_pages++;
+    }
     return result;
 }
 
@@ -102,7 +103,7 @@ void traverse_vmas(struct task_struct* task){
 
 
 void get_everything(struct task_struct* proc){
-    int rss_size=0, swap_size=0, wss_size=0;
+    int rss_size, swap_size, wss_size;
     rss_pages=0;
     swap_pages=0;
     wss_pages=0;
