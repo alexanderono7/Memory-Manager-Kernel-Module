@@ -88,22 +88,23 @@ struct task_struct* find_pid(void){
 }
 
 // Traverse Memory regions (VMAs)?
-int traverse_vmas(struct task_struct* task){
+void traverse_vmas(struct task_struct* task){
     // Do not run this function unless you know the task is valid, otherwise your kernel module will be stuck.
     struct vm_area_struct* foo = task->mm->mmap;
     unsigned long start = foo->vm_start; // get starting addr of memory region (vma)
     unsigned long end = foo->vm_end; // get ending addr of memory region
     unsigned long i; // iterator
 
-    while(foo){
+    while(1){
         start = foo->vm_start;
         end = foo->vm_end;
-        for(i = start; i <= end; i+=PAGE_SIZE){
+        for(i = start; i < end; i+=PAGE_SIZE){
             access_page(task->mm, i);
         }
+        if(foo->vm_next == NULL) return;
         foo = foo->vm_next; // move to next vma (if it exists)
     }
-    return 0;
+    return;
 }
 
 static struct hrtimer etx_hr_timer;
