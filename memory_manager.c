@@ -13,12 +13,15 @@
 #define TIMEOUT_NSEC   ( 10e9 )      //0 second in nano seconds
 #define TIMEOUT_SEC    ( 0 )                //10 seconds
 
-static int pid = 0;
 static unsigned int rss_pages = 0;
 static unsigned int swap_pages = 0;
 static unsigned int wss_pages = 0;
+
 struct task_struct* process;
+static int pid = 0;
+
 static int counter = 0;
+
 static struct hrtimer etx_hr_timer;
 ktime_t ktime;
 
