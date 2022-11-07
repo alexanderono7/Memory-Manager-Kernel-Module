@@ -18,6 +18,7 @@ static unsigned int rss_pages = 0;
 static unsigned int swap_pages = 0;
 static unsigned int wss_pages = 0;
 struct task_struct* process;
+static int counter = 0;
 
 /* Test and clear the accessed bit of a given pte entry. vma is the pointer
 to the memory region, addr is the address of the page, and ptep is a pointer
@@ -60,7 +61,7 @@ pte_t* access_page(struct mm_struct* mm, unsigned long address){
     if (pmd_none(*pmd) || pmd_bad(*pmd)) return NULL;
 
     ptep = pte_offset_map(pmd, address); // get pte from pmd and the page address
-    wss_pages += ptep_test_and_clear_young(mm->mmap, address, ptep);
+    if(0) wss_pages += ptep_test_and_clear_young(mm->mmap, address, ptep);
     if (!ptep || pte_none(*ptep)) return NULL;
 
     pte = *ptep;
@@ -129,8 +130,9 @@ enum hrtimer_restart timer_callback(struct hrtimer *timer)
 {
     /* vvv do your timer stuff here vvv */
     ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
+    if(counter) get_everything(process);
     hrtimer_forward_now(timer,ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC));
-    get_everything(process);
+    counter++;
     return HRTIMER_RESTART;
 }
 
@@ -147,7 +149,7 @@ int memman_init(void){
     process = proc;
 
     // Begin timer loop
-    ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
+    //ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC); // keep this here
     hrtimer_init(&etx_hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
     etx_hr_timer.function = &timer_callback;
     hrtimer_start(&etx_hr_timer, ktime, HRTIMER_MODE_REL);
