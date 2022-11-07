@@ -10,8 +10,8 @@
 
 //#define TIMEOUT_NSEC   ( 1000000000L )      //1 second in nano seconds
 //#define TIMEOUT_SEC    ( 9 )                //9 seconds
-#define TIMEOUT_NSEC   ( 0 )      //0 second in nano seconds
-#define TIMEOUT_SEC    ( 10 )                //10 seconds
+#define TIMEOUT_NSEC   ( 10e9 )      //0 second in nano seconds
+#define TIMEOUT_SEC    ( 0 )                //10 seconds
 
 static int pid = 0;
 static unsigned int rss_pages = 0;
@@ -124,9 +124,11 @@ void get_everything(struct task_struct* proc){
 
 //Timer Callback function. This will be called when timer expires. Executes every 10 seconds until rmmod is called.
 static struct hrtimer etx_hr_timer;
+ktime_t ktime;
 enum hrtimer_restart timer_callback(struct hrtimer *timer)
 {
     /* vvv do your timer stuff here vvv */
+    ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
     hrtimer_forward_now(timer,ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC));
     get_everything(process);
     return HRTIMER_RESTART;
@@ -135,7 +137,6 @@ enum hrtimer_restart timer_callback(struct hrtimer *timer)
 // Initialize kernel module
 int memman_init(void){
     struct task_struct* proc;
-    ktime_t ktime;
 
     // Retrieve task_struct of PID (if it exists - otherwise quit).
     proc = find_pid();
