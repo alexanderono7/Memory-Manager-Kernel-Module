@@ -47,16 +47,16 @@ void experimental(struct mm_struct* mm, unsigned long address){
     pte_t *ptep, pte;
 
     pgd = pgd_offset(mm, address); // get pgd from mm and the page address
-    if (pgd_none(*pgd)) return;
+    //if (pgd_none(*pgd)) return;
 
     p4d = p4d_offset(pgd, address); //get p4d from from pgd and the page address
-    if (p4d_none(*p4d)) return;
+    //if (p4d_none(*p4d)) return;
 
     pud = pud_offset(p4d, address); // get pud from from p4d and the page address
-    if (pud_none(*pud)) return;
+    //if (pud_none(*pud)) return;
 
     pmd = pmd_offset(pud, address); // get pmd from from pud and the page address
-    if (pmd_none(*pmd)) return;
+    //if (pmd_none(*pmd)) return;
 
     ptep = pte_offset_map(pmd, address); // get pte from pmd and the page address
     //if (!ptep) return;
