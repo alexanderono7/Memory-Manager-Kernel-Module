@@ -126,9 +126,9 @@ void get_everything(struct task_struct* proc){
 static struct hrtimer etx_hr_timer;
 enum hrtimer_restart timer_callback(struct hrtimer *timer)
 {
-    hrtimer_forward_now(timer,ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC));
     /* vvv do your timer stuff here vvv */
     get_everything(process);
+    hrtimer_forward_now(timer,ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC));
     return HRTIMER_RESTART;
 }
 
