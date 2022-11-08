@@ -8,8 +8,6 @@
 #include <linux/hrtimer.h>
 #include <linux/ktime.h>
 
-//#define TIMEOUT_NSEC   ( 1000000000L )      //1 second in nano seconds
-//#define TIMEOUT_SEC    ( 9 )                //9 seconds
 #define TIMEOUT_NSEC   ( 10e9 )      //0 second in nano seconds
 #define TIMEOUT_SEC    ( 0 )                //10 seconds
 
@@ -19,8 +17,6 @@ static unsigned int wss_pages = 0;
 
 struct task_struct* process;
 static int pid = 0;
-
-static int counter = 0;
 
 static struct hrtimer etx_hr_timer;
 ktime_t ktime;
@@ -114,11 +110,8 @@ void get_everything(struct task_struct* proc){
 enum hrtimer_restart timer_callback(struct hrtimer *timer)
 {
     /* vvv do your timer stuff here vvv */
-    //ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
-    //if(counter) get_everything(process);
-    get_everything(process);
     hrtimer_forward_now(timer,ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC));
-    //counter++;
+    get_everything(process);
     return HRTIMER_RESTART;
 }
 
