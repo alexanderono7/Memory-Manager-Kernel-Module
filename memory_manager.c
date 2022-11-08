@@ -82,7 +82,7 @@ void traverse_vmas(struct task_struct* task){
     unsigned long start, end, i; // starting addr of memory region, ending addr, iterator value
 
     // Iterate through VMAs Linked List as long as next VMA exists.
-    while(1){
+    while(foo != NULL){
         start = foo->vm_start;
         end = foo->vm_end;
 
@@ -90,7 +90,6 @@ void traverse_vmas(struct task_struct* task){
         for(i = start; i < end; i+=PAGE_SIZE){
             access_page(task->mm, i);
         }
-        if(foo->vm_next == NULL) return;
         foo = foo->vm_next; // move to next vma (if it exists)
     }
     return;
@@ -115,27 +114,21 @@ void get_everything(struct task_struct* proc){
 enum hrtimer_restart timer_callback(struct hrtimer *timer)
 {
     /* vvv do your timer stuff here vvv */
-    ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
-    if(counter) get_everything(process);
+    //ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC);
+    //if(counter) get_everything(process);
+    get_everything(process);
     hrtimer_forward_now(timer,ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC));
-    counter++;
+    //counter++;
     return HRTIMER_RESTART;
 }
 
 // Initialize kernel module
 int memman_init(void){
-    struct task_struct* proc;
-
-    // Retrieve task_struct of PID (if it exists - otherwise quit).
-    proc = find_pid();
-    if(!proc){
-        printk("Couldn't find process w/ PID %d. Exiting.", pid);
-        return 0;
-    }
-    process = proc;
+    // Retrieve task_struct of PID
+    process = pid_task(find_vpid(pid), PIDTYPE_PID);
 
     // Begin timer loop
-    //ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC); // keep this here
+    ktime = ktime_set(TIMEOUT_SEC, TIMEOUT_NSEC); // keep this here
     hrtimer_init(&etx_hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
     etx_hr_timer.function = &timer_callback;
     hrtimer_start(&etx_hr_timer, ktime, HRTIMER_MODE_REL);
